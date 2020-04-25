@@ -1,5 +1,5 @@
 # smart_uav
-Developed using P5.js. Program base on SNAKE game to emulate a smart UAV that should visit determined points, avoid the charge to end. 
+Developed using P5.js. Program base on SNAKE game to emulate a smart UAV that should visit determined points avoiding obstacles and the charge to end. 
 
 ## Neural Network
 ![](https://github.com/eliaslawrence/smart_uav/blob/master/example.gif)
