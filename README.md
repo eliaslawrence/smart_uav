@@ -1,5 +1,5 @@
 # smart_uav
-Developed using P5.js. Program base on SNAKE game, [Steering Behaviour](https://youtu.be/flxOkx0yLrY)! and [Smart Rockets](https://youtu.be/bGz7mv2vD6g)! to emulate a smart UAV that should visit determined points avoiding obstacles and the charge to end. 
+Developed using P5.js. Program base on SNAKE game, [Steering Behaviour](https://youtu.be/flxOkx0yLrY) and [Smart Rockets](https://youtu.be/bGz7mv2vD6g) to emulate a smart UAV that should visit determined points avoiding obstacles and the charge to end. 
 
 ## Neural Network
 ![](https://github.com/eliaslawrence/smart_uav/blob/master/example.gif)
