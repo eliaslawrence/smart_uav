@@ -9,7 +9,7 @@ It was developed a simple Neural Network and the UAV learns through reinforcemen
 The vehicle receive as input distance in each direction to:
 - Obstacles
 - Recharge points
-- Way Points (points it should visit)
+- Waypoints (points it should visit)
 
 ## Genetic Algorithm
 
