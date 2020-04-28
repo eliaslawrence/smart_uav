@@ -1,13 +1,5 @@
 // Elias Lawrence
-// The Coding Train
-// Coding Challenge 69: Steering Evolution
-// Part 1: https://youtu.be/flxOkx0yLrY
-// Part 2: https://youtu.be/XaOVH8ZSRNA
-// Part 3: https://youtu.be/vZUWTlK7D2Q
-// Part 4: https://youtu.be/ykOcaInciBI
-// Part 5: https://youtu.be/VnFF5V5DS8s
 
-///////
 const OBSTACLE_RED = 255; 	
 const OBSTACLE_GREEN = 30;//0;
 const OBSTACLE_BLUE = 86;//0;
