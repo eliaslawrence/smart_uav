@@ -11,8 +11,8 @@ function Sensor(_base, _vec, _type, _graphics) {
     this.color = OBSTACLE_COLOR;
     
     switch(this.type){
-        case CLIENT_TYPE: 
-            this.color = CLIENT_COLOR;
+        case WAY_POINT_TYPE: 
+            this.color = WAY_POINT_COLOR;
             break;
         case STATION_TYPE: 
             this.color = STATION_COLOR;

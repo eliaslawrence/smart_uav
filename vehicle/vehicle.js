@@ -2,12 +2,12 @@
 
 var mr = 0.01;
 
-function Vehicle(x, y, _clients, _energystations, _obstacles, _graphics, _initX, _initY) {
+function Vehicle(_problem, _graphics, _initX, _initY) {
     this.acceleration = createVector(0, 0);
     this.velocity  = createVector(0, -2);
     this.direction = createVector(0, -2);
-    this.position = createVector(x, y);
-    this.lastPosition = createVector(x, y);
+    this.position = createVector(_problem.origin.x, _problem.origin.y);
+    this.lastPosition = createVector(_problem.origin.x, _problem.origin.y);
     this.r = 5;
     this.rotationspeed = 0.02;
     this.maxspeed = 0.5;
@@ -21,52 +21,52 @@ function Vehicle(x, y, _clients, _energystations, _obstacles, _graphics, _initX,
     this.vision = [];
     
     // NN
-    this.brain          = new NeuralNetwork(this.numSensors * 3 + 1, 1, 18, 4);
-    this.lastClientTime = 0;
-    this.time           = 0;
-    this.fitness        = 0;
-    this.qtyClients     = 0;
-    this.lastQtyClients = 0;
-    this.distance       = Infinity;
-    this.collide        = false;
+    this.brain            = new NeuralNetwork(this.numSensors * 3 + 1, 1, 18, 4);
+    this.lastWayPointTime = 0;
+    this.time             = 0;
+    this.fitness          = 0;
+    this.qtyWayPoints     = 0;
+    this.lastQtyWayPoints = 0;
+    this.distance         = Infinity;
+    this.collide          = false;
     
     this.graphics = _graphics;
     this.initX    = _initX;
     this.initY    = _initY;
     
-    // Clients
-    this.clients = [];
+    // Way Points
+    this.wayPoints = [];
     
-    for(let i = 0; i < _clients.length; i++){
-        this.clients.push(new Client(_clients[i].x, _clients[i].y, clientMaxWidth, clientMaxHeight, this.graphics));
+    for(let i = 0; i < _problem.wayPoints.length; i++){
+        this.wayPoints.push(new WayPoint(_problem.wayPoints[i].x, _problem.wayPoints[i].y, wayPointMaxWidth, wayPointMaxHeight, this.graphics));
     }
     
     // Energy Stations
     this.energystations = [];
     
-    for(let i = 0; i < _energystations.length; i++){
-        this.energystations.push(new EnergyStation(_energystations[i].x, _energystations[i].y, energyStationWidth, energyStationHeight, this.graphics));
+    for(let i = 0; i < _problem.energystations.length; i++){
+        this.energystations.push(new EnergyStation(_problem.energystations[i].x, _problem.energystations[i].y, energyStationWidth, energyStationHeight, this.graphics));
     }
     
     // Obstacles
     this.obstacles = [];
     
-    for(let i = 0; i < _obstacles.length; i++){
+    for(let i = 0; i < _problem.obstacles.length; i++){
 //        let randomObstacleMaxWidth = random(obstacleMaxWidth);
-        this.obstacles.push(new Obstacle(_obstacles[i].x, _obstacles[i].y, obstacleMaxWidth, obstacleMaxWidth, this.graphics));
+        this.obstacles.push(new Obstacle(_problem.obstacles[i].x, _problem.obstacles[i].y, obstacleMaxWidth, obstacleMaxWidth, this.graphics));
     }
     
     // Map
 //    this.map = new Map(width, height, this.graphics.width, this.graphics.height, pixels, this.initX, this.initY);
-    this.map = new Map(this.graphics.width, this.graphics.height, this.initX, this.initY, this.obstacles, this.clients, this.energystations);    
+    this.map = new Map(this.graphics.width, this.graphics.height, this.initX, this.initY, this.obstacles, this.wayPoints, this.energystations);    
     
     this.loadPixels = true;
     // Method to update location
-    this.update = function() {
+    this.update = function() {        
         this.health -= 0.0005;
         this.fitness++;
         this.time++;
-        
+
         // Update velocity
         this.velocity.add(this.acceleration);
         // Limit speed
@@ -74,19 +74,19 @@ function Vehicle(x, y, _clients, _energystations, _obstacles, _graphics, _initX,
         this.position.add(this.velocity);
         // Reset accelerationelertion to 0 each cycle
         this.acceleration.mult(0);
-//        this.acceleration = createVector(0, 0);
-        
-//        this.lastPosition = createVector(this.position.x, this.position.y); 
-        
+    //    this.acceleration = createVector(0, 0);
+
+    //    this.lastPosition = createVector(this.position.x, this.position.y); 
+
         this.collisionDetection();
-        
+
         if(this.fitness > 2500){
             this.health = 0;
         }
-        
+
         // NN
         this.look();
-        this.think();
+        this.think();       
     };
     
     this.applyForce = function(force) {
@@ -95,11 +95,11 @@ function Vehicle(x, y, _clients, _energystations, _obstacles, _graphics, _initX,
     };
     
     this.betterThan = function(b) {
-        if(this.qtyClients > b.qtyClients){
+        if(this.qtyWayPoints > b.qtyWayPoints){
             return true;
-        }else if(this.qtyClients == b.qtyClients){
-            if(this.qtyClients > 0){
-               return this.lastClientTime < b.lastClientTime;
+        }else if(this.qtyWayPoints == b.qtyWayPoints){
+            if(this.qtyWayPoints > 0){
+               return this.lastWayPointTime < b.lastWayPointTime;
             }
             
             return this.distance < b.distance;
@@ -122,19 +122,19 @@ function Vehicle(x, y, _clients, _energystations, _obstacles, _graphics, _initX,
     this.collisionDetection = function() {
         this.obstacleCollision(this.obstacles);
         this.stationCollision(this.energystations, 0.5);
-        this.clientCollision(this.clients);
+        this.wayPointCollision(this.wayPoints);
         this.edgeCollision();
     };
         
-    this.clientCollision = function(list) {
+    this.wayPointCollision = function(list) {
         for (var i = list.length - 1; i >= 0; i--) {
             var d = this.position.dist(createVector(list[i].position.x + list[i].r/2, list[i].position.y + list[i].r/2));
             
             if (d < list[i].r/2 + this.r){//this.maxspeed) {
                 list.splice(i, 1);
-                this.qtyClients++;
+                this.qtyWayPoints++;
                 this.fitness = 0;
-                this.lastClientTime = this.time;             
+                this.lastWayPointTime = this.time;             
                    
                 this.loadPixels = true;
                 break;
@@ -217,11 +217,11 @@ function Vehicle(x, y, _clients, _energystations, _obstacles, _graphics, _initX,
         //this.applyForce(steer);
     };
     
-    this.dead = function() {
+    this.isDead = function() {
         let smallerDistance = Infinity;
         let d;
-        for (let i = 0; i < this.clients.length; i++) {
-            d = this.position.dist(this.clients[i].position);
+        for (let i = 0; i < this.wayPoints.length; i++) {
+            d = this.position.dist(this.wayPoints[i].position);
             
             if(d < smallerDistance){
                 smallerDistance = d;
@@ -230,7 +230,7 @@ function Vehicle(x, y, _clients, _energystations, _obstacles, _graphics, _initX,
         
         this.distance = smallerDistance;
         
-        return this.health <= 0;
+        return this.wayPoints.length == 0 || this.health <= 0;
     };
     
     this.updateSensors2 = function() {
@@ -270,8 +270,8 @@ function Vehicle(x, y, _clients, _energystations, _obstacles, _graphics, _initX,
                 } else if(this.map.isStation(tempX, tempY)){
                     type = STATION_TYPE;
                     break loop;                          
-                } else if(this.map.isClient(tempX, tempY)){
-                    type = CLIENT_TYPE;
+                } else if(this.map.isWayPoint(tempX, tempY)){
+                    type = WAY_POINT_TYPE;
                     break loop;                          
                 }
 //
@@ -322,9 +322,9 @@ function Vehicle(x, y, _clients, _energystations, _obstacles, _graphics, _initX,
             this.energystations[i].show();
         } 
         
-        // Clients
-        for(let i = 0; i < this.clients.length; i++){
-            this.clients[i].show();
+        // Way Points
+        for(let i = 0; i < this.wayPoints.length; i++){
+            this.wayPoints[i].show();
         } 
         
         if(this.health > 0){
@@ -332,7 +332,7 @@ function Vehicle(x, y, _clients, _energystations, _obstacles, _graphics, _initX,
     //            image(this.graphics, this.initX, this.initY);
     //            loadPixels();            
     //            this.map.update(pixels);      
-                this.map.update(this.obstacles, this.clients, this.energystations);
+                this.map.update(this.obstacles, this.wayPoints, this.energystations);
                 this.loadPixels = false;
             }
 
@@ -399,7 +399,7 @@ function Vehicle(x, y, _clients, _energystations, _obstacles, _graphics, _initX,
     };
     
     this.clone = function() {
-        let cloneVehicle = new Vehicle(initX, initY, clients, energystations, obstacles, pg, 0, 0);
+        let cloneVehicle = new Vehicle(initX, initY, wayPoints, energystations, obstacles, pg, 0, 0);
         cloneVehicle.brain = this.brain;
         
         return cloneVehicle;
@@ -472,27 +472,21 @@ function Vehicle(x, y, _clients, _energystations, _obstacles, _graphics, _initX,
         } 
         
         let visionInd;
-        for(let i = 0; i < this.sensors.length; i++) {
-//            visionInd = 4*i;
-//            this.vision[visionInd]   = this.sensors[i].type == CLIENT_TYPE   ? 1 : 0; // client?
-//            this.vision[visionInd+1] = this.sensors[i].type == STATION_TYPE  ? 1 : 0; // energy station?
-//            this.vision[visionInd+2] = this.sensors[i].type == OBSTACLE_TYPE ? 1 : 0; // prohibited?
-//            this.vision[visionInd+3] = 1/(this.sensors[i].vector.mag());              // distance
-            
+        for(let i = 0; i < this.sensors.length; i++) {                     
             visionInd = 3*i;
-            this.vision[visionInd]   = -1; // client?
+            this.vision[visionInd]   = -1; // way point?
             this.vision[visionInd+1] = -1; // energy station?
             this.vision[visionInd+2] = -1; // prohibited?
             
             switch(this.sensors[i].type){
-                    case CLIENT_TYPE:
-                        this.vision[visionInd]   = 1/(this.sensors[i].vector.mag()); // client?
+                    case WAY_POINT_TYPE:
+                        this.vision[visionInd]   = 1/(this.sensors[i].vector.mag()); 
                         break;
                     case STATION_TYPE:
-                        this.vision[visionInd+1] = 1/(this.sensors[i].vector.mag()); // client?
+                        this.vision[visionInd+1] = 1/(this.sensors[i].vector.mag()); 
                         break;
                     case OBSTACLE_TYPE:
-                        this.vision[visionInd+2] = 1/(this.sensors[i].vector.mag()); // client?
+                        this.vision[visionInd+2] = 1/(this.sensors[i].vector.mag()); 
                         break;
             }
         }

@@ -24,6 +24,8 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _bot, _rho, _decoder) {
     
     this.fixedRK = [];
     
+    this.population = [];
+    
     // RK
     this.generateRandomKeys = function() {
         let rk = [];
@@ -51,7 +53,37 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _bot, _rho, _decoder) {
         }  
         
         return initialPop;
-    }    
+    } 
+    
+    this.loadInitialPopulation = function(data) {
+        let initialPop = [];
+        
+        let i;
+        for(i = 0; i < this.maxPopSize || i < data.population.length; i++){
+            let rk  = data.population[i];
+            let ind = this.decoder.decode(rk);
+            initialPop.push({rk: rk, individual: ind});
+        }  
+        
+        // If maxPopSize is greater than model saved
+        for(i; i < this.maxPopSize; i++){
+            let rk  = this.generateRandomKeys();
+            let ind = this.decoder.decode(rk);
+            initialPop.push({rk: rk, individual: ind});
+        }  
+        
+        return initialPop;
+    }
+    
+    this.savePopulation = function(population) {
+        let modelToSave = {};
+        modelToSave.population = [];
+        for(let i = 0; i < this.maxPopSize; i++){
+            modelToSave.population.push(population[i].rk);            
+        }  
+        
+        save(modelToSave, 'model.json');
+    }
     
     // Crossover
     this.electParents = function(population) {
@@ -137,35 +169,20 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _bot, _rho, _decoder) {
         
     this.exec = function(population, numGenerations) {   
         console.log("rank");
-//        console.log(population);
-//        console.log(population[0].rk);
-        population = this.rank(population);
-//        console.log("rank");
-        console.log(population[0].rk);
         let newPopulation;
         
         for(let g = 0; g < numGenerations; g++){
             // copy population
 //            newPopulation = [...population];
-            newPopulation = population;
-//            console.log("newPopulation");
-//            console.log(newPopulation);
-
-//            console.log("population");
-//            console.log(population);
+            newPopulation = this.rank(population);
             
             newPopulation = this.elite(population, newPopulation);
             newPopulation = this.crossover(population, newPopulation);
             newPopulation = this.mutate(population, newPopulation);
             
             population = newPopulation;
-        }  
+        }
         
-//        console.log("newPopulation");
-//        console.log(newPopulation);
-        
-//        console.log("population");
-//        console.log(population);
         return population;
     };    
     

@@ -108,22 +108,23 @@ function NeuralNetwork(_qtyNeuronsInput, _qtyHiddenLayers, _qtyNeuronsHidden, _q
         }
     }
     
-//    this.print = function (){     
-//        let vals = [];
-//        // Each layer
-//        for(let layerIndex = 1; layerIndex < this.layers.length; layerIndex++){
-//            // Each neuron
-//            for(let neuronIndex = 0; neuronIndex < this.layers[layerIndex].neurons.length; neuronIndex++){
-//                // Each weight
-//                for(let weightIndex = 0; weightIndex < this.layers[layerIndex].neurons[neuronIndex].weights.length; weightIndex++){
-//                    vals.push(this.layers[layerIndex].neurons[neuronIndex].weights[weightIndex]);
-//                }
-//                
-//                this.layers[layerIndex].neurons[neuronIndex].output = weights[count++];
-//            }
-//        }
-//        console.log(vals);
-//    }
+    this.getWeights = function (){     
+        let weights = [];
+        // Each layer
+        for(let layerIndex = 1; layerIndex < this.layers.length; layerIndex++){
+            // Each neuron
+            for(let neuronIndex = 0; neuronIndex < this.layers[layerIndex].neurons.length; neuronIndex++){
+                // Each weight
+                for(let weightIndex = 0; weightIndex < this.layers[layerIndex].neurons[neuronIndex].weights.length; weightIndex++){
+                    weights.push(this.layers[layerIndex].neurons[neuronIndex].weights[weightIndex])
+                }
+                
+                weights.push(this.layers[layerIndex].neurons[neuronIndex].bias);
+            }
+        }
+        
+        return weights;
+    }
     
     this.output = function (input){
         // Each neuron

@@ -1,6 +1,8 @@
 // Elias Lawrence
 
-function Client(_x, _y, _w, _h, _graphics) {       
+function WayPoint(_x, _y, _w, _h, _graphics) {   
+    this.x = _x;
+    this.y = _y;
     this.w = _w;
     this.r = this.w;
     this.graphics = _graphics;
@@ -13,7 +15,7 @@ function Client(_x, _y, _w, _h, _graphics) {
     
     this.position = createVector(_x, _y);
     
-    this.color = CLIENT_COLOR;
+    this.color = WAY_POINT_COLOR;
     
     this.contains = function(_x, _y) {
         

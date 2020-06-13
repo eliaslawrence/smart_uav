@@ -3,7 +3,7 @@
 function Decoder() {     
     
     this.decode = function(randomKeys) {
-        let vehicle = new Vehicle(initX, initY, clients, energystations, obstacles, pg, 0, 0);
+        let vehicle = new Vehicle(problem, pg, 0, 0);
         let weights = [];
         
         for(let i = 0; i < randomKeys.length; i++){
