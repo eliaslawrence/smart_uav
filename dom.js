@@ -55,7 +55,7 @@ function setDOM(){
     // BUTTONS
     let finishButton = select('#finish-map');    
     finishButton.mousePressed(function() {
-        problem.finish();        
+        problem.finish();          
         
         let wpMapButton = select('#way-point-map');           
         let eMapButton  = select('#energy-station-map');            

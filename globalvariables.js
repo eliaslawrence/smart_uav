@@ -40,9 +40,6 @@ var numWayPoints = 0;
 
 var vehicleSize  = 10;
 
-var obstacleMaxHeight = 15;
-var obstacleMaxWidth  = 15;
-
 var energyStationHeight = 8;
 var energyStationWidth  = 8;
 
@@ -75,6 +72,10 @@ let currentIndP;
 let bestQtyWayPoints = 0;
 let bestGenQtyWayPoints = 0;
 let bestGenFit = Infinity;
+let bestIndRef = 0;
+let bestGenIndRef = 0;
+let bestDistRef = Infinity;
+let bestGenDistRef = Infinity;
 let slider;
 
 let start = false;

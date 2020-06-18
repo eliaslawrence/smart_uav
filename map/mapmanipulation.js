@@ -5,6 +5,9 @@ OBSTACLE_BUTTON        = 3;
 ORIGIN_BUTTON          = 4;
 lastInserted           = [];
 
+let astar     = undefined;
+let waveFront = undefined;
+
 function setProblemConfig(){            
     // BUTTONS
     let wpMapButton = select('#way-point-map');           
@@ -91,8 +94,21 @@ function setProblemConfig(){
 }
 
 function mousePressed() {
+    if(mouseX > 0 && mouseX < pgWidth && mouseY > 0 && mouseY < pgHeight){  
+        if(mapButtonSelected != OBSTACLE_BUTTON){
+            problem.insert(mapButtonSelected, mouseX, mouseY);
+        }                
+    }
+    
+    // prevent default
+    return false;
+}
+
+function mouseDragged() {
     if(mouseX > 0 && mouseX < pgWidth && mouseY > 0 && mouseY < pgHeight){   
-        problem.insert(mapButtonSelected, mouseX, mouseY);        
+        if(mapButtonSelected == OBSTACLE_BUTTON){
+            problem.insert(mapButtonSelected, mouseX, mouseY);
+        }       
     }
     
     // prevent default
@@ -106,6 +122,8 @@ function Problem() {
     this.obstacles      = [];
     this.wayPoints      = [];
     this.origin         = undefined;
+    
+    this.map;
     
     this.undo = function() {
         let last = this.insertions.pop();
@@ -130,6 +148,8 @@ function Problem() {
     this.finish = function() {
         mapButtonSelected = 0;
         this.insertions   = [];
+        
+        this.setMap();
         
         return;
     }
@@ -253,6 +273,18 @@ function Problem() {
         // Origin
         this.origin = new Origin(problemLoaded.origin.x, problemLoaded.origin.y, originMaxHeight, pg);
         
+        this.setMap();
+        
         return;
+    }
+    
+    this.setMap = function(){
+        this.map = new Map(pg.width, pg.height, this.origin.x, this.origin.y, this.obstacles, this.wayPoints, this.energystations);
+        
+//        astar = new AStar(this.origin.x, this.origin.y, this.wayPoints[0].x, this.wayPoints[0].y, 10, 10);
+        
+        waveFront = new WaveFront(pg, this.wayPoints[0].x, this.wayPoints[0].y, true, 10, 5, 4);
+               
+//        console.log(astar.astar());
     }
 }

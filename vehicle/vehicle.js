@@ -1,12 +1,14 @@
 // Elias Lawrence
 
-var mr = 0.01;
+var mr          = 0.01;
+var numSensors  = 12;
+var nnInputSize = numSensors * 2 + 6;
 
 function Vehicle(_problem, _graphics, _initX, _initY) {
     this.acceleration = createVector(0, 0);
-    this.velocity  = createVector(0, -2);
-    this.direction = createVector(0, -2);
-    this.position = createVector(_problem.origin.x, _problem.origin.y);
+    this.velocity     = createVector(0, -2);
+    this.direction    = createVector(0, -2);
+    this.position     = createVector(_problem.origin.x, _problem.origin.y);
     this.lastPosition = createVector(_problem.origin.x, _problem.origin.y);
     this.r = 5;
     this.rotationspeed = 0.02;
@@ -15,13 +17,18 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
 
     this.health = 1;
     
+    // A *
+    this.distToRef  = 0;
+    this.bestIndRef = 0;   
+    this.distWP     = Infinity;
+    
     // Vision
-    this.numSensors = 12;    
+    this.numSensors = numSensors;    
     this.sensors = [];
     this.vision = [];
     
     // NN
-    this.brain            = new NeuralNetwork(this.numSensors * 3 + 1, 1, 18, 4);
+    this.brain            = new NeuralNetwork(nnInputSize, 1, 18, 4);
     this.lastWayPointTime = 0;
     this.time             = 0;
     this.fitness          = 0;
@@ -53,7 +60,7 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
     
     for(let i = 0; i < _problem.obstacles.length; i++){
 //        let randomObstacleMaxWidth = random(obstacleMaxWidth);
-        this.obstacles.push(new Obstacle(_problem.obstacles[i].x, _problem.obstacles[i].y, obstacleMaxWidth, obstacleMaxWidth, this.graphics));
+        this.obstacles.push(new Obstacle(_problem.obstacles[i].x, _problem.obstacles[i].y, _problem.obstacles[i].w, _problem.obstacles[i].h, this.graphics));
     }
     
     // Map
@@ -83,6 +90,9 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
         if(this.fitness > 2500){
             this.health = 0;
         }
+        
+        // Reference
+        this.calculateDistanceToReference();
 
         // NN
         this.look();
@@ -98,21 +108,41 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
         if(this.qtyWayPoints > b.qtyWayPoints){
             return true;
         }else if(this.qtyWayPoints == b.qtyWayPoints){
+//            if(this.distWP < b.distWP){
+                return true;
+//            }else if(this.distWP == b.distWP){
+                if(this.distToRef > b.bestIndRef){
+                    return true;
+                }else if(this.distToRef == b.distToRef){            
+                    return this.bestIndRef > b.bestIndRef;
+                }
+//            }
+        }
+        
+        return false;
+    }
+    
+    this.betterThan2 = function(b) {
+        if(this.qtyWayPoints > b.qtyWayPoints){
+            return true;
+        }else if(this.qtyWayPoints == b.qtyWayPoints){
             if(this.qtyWayPoints > 0){
+//                return this.distance < b.distance;
                return this.lastWayPointTime < b.lastWayPointTime;
-            }
+            } 
             
-            return this.distance < b.distance;
-//            if(this.collide){ // a collides
+//            else if(this.collide){ // a collides
 //                if(b.collide){ // a & b collide
-//                    return this.time < b.time;
+//                    return this.distance < b.distance;
+////                    return this.time < b.time;
 //                }else{ // just a collides
 //                    return false;
 //                }                
 //            } else if(b.collide){ // just b collides
 //                return true;
 //            }
-//            
+            
+            return this.distance < b.distance;
 //            return this.time < b.time;   // a & b don't collide
         }
         
@@ -129,6 +159,10 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
     this.wayPointCollision = function(list) {
         for (var i = list.length - 1; i >= 0; i--) {
             var d = this.position.dist(createVector(list[i].position.x + list[i].r/2, list[i].position.y + list[i].r/2));
+            
+            if(d < this.distance){
+                this.distance = d;
+            }
             
             if (d < list[i].r/2 + this.r){//this.maxspeed) {
                 list.splice(i, 1);
@@ -157,13 +191,14 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
     
     this.obstacleCollision = function(list) {
         for (var i = list.length - 1; i >= 0; i--) {                
-            var d = this.position.dist(createVector(list[i].position.x + list[i].r/2, list[i].position.y + list[i].r/2));
+            var d_x = this.position.dist(createVector(list[i].position.x + list[i].w/2, this.position.y));
+            var d_y = this.position.dist(createVector(this.position.x, list[i].position.y + list[i].h/2));
             
-            if (d < list[i].r/2 + this.r) {
+            if (d_x < list[i].w/2 + this.r && d_y < list[i].h/2 + this.r) {
                 this.health = 0;
                 this.collide = true;
                 break;
-            } 
+            }                         
         }
     };
     
@@ -218,17 +253,17 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
     };
     
     this.isDead = function() {
-        let smallerDistance = Infinity;
-        let d;
-        for (let i = 0; i < this.wayPoints.length; i++) {
-            d = this.position.dist(this.wayPoints[i].position);
-            
-            if(d < smallerDistance){
-                smallerDistance = d;
-            }
-        }
-        
-        this.distance = smallerDistance;
+//        let smallerDistance = Infinity;
+//        let d;
+//        for (let i = 0; i < this.wayPoints.length; i++) {
+//            d = this.position.dist(this.wayPoints[i].position);
+//            
+//            if(d < smallerDistance){
+//                smallerDistance = d;
+//            }
+//        }
+//        
+//        this.distance = smallerDistance;
         
         return this.wayPoints.length == 0 || this.health <= 0;
     };
@@ -270,10 +305,13 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
                 } else if(this.map.isStation(tempX, tempY)){
                     type = STATION_TYPE;
                     break loop;                          
-                } else if(this.map.isWayPoint(tempX, tempY)){
-                    type = WAY_POINT_TYPE;
-                    break loop;                          
-                }
+                } 
+//                else if(this.map.isWayPoint(tempX, tempY)){
+//                    type = WAY_POINT_TYPE;
+//                    break loop;                          
+//                }
+                
+                
 //
 //                for (var i = 0; i < obstacles.length; i++) {
 //                    if (obstacles[i].contains(tempX, tempY)) {
@@ -466,7 +504,7 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
 //        this.velocity.rotate(-PI / 2);
     }
     
-    this.look = function() {
+    this.look2 = function() {
         if(!this.firstLoop){
             this.updateSensors();            
         } 
@@ -490,8 +528,57 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
                         break;
             }
         }
+                
+        this.vision[this.sensors.length*3]     = this.health;
         
-        this.vision[this.sensors.length*3] = this.health;
+//        this.vision[this.sensors.length*3 + 1] = -1;
+//        this.vision[this.sensors.length*3 + 2] = -1;
+//        this.vision[this.sensors.length*3 + 3] = -1;
+//        this.vision[this.sensors.length*3 + 4] = -1;
+    }
+    
+    this.look = function() {
+        if(!this.firstLoop){
+            this.updateSensors();            
+        } 
+        
+        let visionInd;
+        for(let i = 0; i < this.sensors.length; i++) {                     
+            visionInd = 2*i;
+//            this.vision[visionInd]   = -1; // way point?
+            this.vision[visionInd] = -1; // energy station?
+            this.vision[visionInd+1] = -1; // prohibited?
+            
+            switch(this.sensors[i].type){
+//                    case WAY_POINT_TYPE:
+//                        this.vision[visionInd]   = 1/(this.sensors[i].vector.mag()); 
+//                        break;
+                    case STATION_TYPE:
+                        this.vision[visionInd] = 1/(this.sensors[i].vector.mag()); 
+                        break;
+                    case OBSTACLE_TYPE:
+                        this.vision[visionInd+1] = 1/(this.sensors[i].vector.mag()); 
+                        break;
+            }
+        }
+                
+        this.vision[this.sensors.length*2]     = this.health;
+        
+        // Vehicle position
+        this.vision[this.sensors.length*2 + 1] = this.position.x / this.graphics.width;
+        this.vision[this.sensors.length*2 + 2] = this.position.y / this.graphics.height;
+        
+        // Way point position        
+        if(this.wayPoints[0]){
+            this.vision[this.sensors.length*2 + 3] = this.wayPoints[0].position.x / this.graphics.width;
+            this.vision[this.sensors.length*2 + 4] = this.wayPoints[0].position.y / this.graphics.height;
+        } else {
+            this.vision[this.sensors.length*2 + 3] = -1;
+            this.vision[this.sensors.length*2 + 4] = -1;
+        }
+        
+        this.vision[this.sensors.length*2 + 5] = this.direction.heading() / TWO_PI;
+
     }
     
     this.think = function() {
@@ -522,32 +609,30 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
         }
     }
     
-    // Vehicle s close to the borders?
-    this.boundaries = function() {
-//        var d = 25;
-//        
-//        var desired = null;
-//        
-//        // close to the border horizontally
-//        if (this.position.x < d) {
-//            desired = createVector(this.maxspeed, this.velocity.y);
-//        } else if (this.position.x > width - d) {
-//            desired = createVector(-this.maxspeed, this.velocity.y);
-//        }
-//        
-//        // close to the border vertically
-//        if (this.position.y < d) {
-//            desired = createVector(this.velocity.x, this.maxspeed);
-//        } else if (this.position.y > height - d) {
-//            desired = createVector(this.velocity.x, -this.maxspeed);
-//        }
-//        
-//        if (desired !== null) {
-//            desired.normalize();
-//            desired.mult(this.maxspeed);
-//            var steer = p5.Vector.sub(desired, this.velocity);
-//            steer.limit(this.maxforce);
-//            this.applyForce(steer);
-//        }
-    };
+    this.calculateDistanceToReference = function() {
+        let record = Infinity;
+        let index = 0;
+        for(let i = astar.path.length - 1; i >= 0; i--){
+//            if(astar.path.length - 1 - i > this.bestIndRef){
+                let d = this.position.dist(astar.path[i]);
+                if(d < record){
+                    record = d;
+                    index  = astar.path.length - 1 - i;
+                }
+//            }
+        }
+        
+        this.distToRef += record;
+        this.bestIndRef = max(index, this.bestIndRef);
+    }
+    
+    this.calculateDistanceToWP = function() {
+        let d = Infinity;
+        
+        if(this.wayPoints[0]){
+            d = this.position.dist(this.wayPoints[0].position);
+        }
+        
+        this.distWP = min(d, this.bestIndRef);
+    }
 }

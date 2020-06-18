@@ -1,4 +1,6 @@
 // Elias Lawrence
+var obstacleMaxHeight = 15;
+var obstacleMaxWidth  = 15;
 
 function Obstacle(_x, _y, _w, _h, _graphics) {  
     this.x = _x;

@@ -108,6 +108,8 @@ function NeuralNetwork(_qtyNeuronsInput, _qtyHiddenLayers, _qtyNeuronsHidden, _q
         }
     }
     
+    console.log("teste");
+    
     this.getWeights = function (){     
         let weights = [];
         // Each layer

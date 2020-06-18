@@ -60,6 +60,24 @@ function Map(_graphicsW, _graphicsH, _initX, _initY, _obstacles, _wayPoints, _en
         return this.map[parseInt(x_) + parseInt(y_) * this.graphicsW] == OBSTACLE_TYPE;      
     }
     
+    this.containsObstacle = function(x_, y_, radius_) {
+        let start_x = x_ - radius_;
+        let start_y = y_ - radius_;
+        
+        for (let i = start_x; i < x_ + radius_; i++) {
+            for (let j = start_y; j < y_ + radius_; j++) {
+                let index = parseInt(i) + parseInt(j) * this.graphicsW;
+                if(index > 0 && index < this.map.length){
+                    if(this.map[index] == OBSTACLE_TYPE){
+                       return true;
+                    }
+                }                
+            }
+        }
+        
+        return false;      
+    }
+    
     this.isStation = function(x_, y_) {
         return this.map[parseInt(x_) + parseInt(y_) * this.graphicsW] == STATION_TYPE;      
     }

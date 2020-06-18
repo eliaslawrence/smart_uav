@@ -124,11 +124,11 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _bot, _rho, _decoder) {
     // Mutation
     this.mutate = function(population, newPopulation) {        
         for(let i = this.mutantStartIndex; i < this.mutantEndIndex; i++){
-            let index = parseInt(random(this.crossoverStartIndex, this.maxPopSize));
+//            let index = parseInt(random(this.crossoverStartIndex, this.maxPopSize));
             
-            let rk  = population[index].rk;
+//            let rk  = population[index].rk;
             
-//            let rk  = this.generateRandomKeys();
+            let rk  = this.generateRandomKeys();
             let ind = this.decoder.decode(rk);
             
             newPopulation[i] = {rk: rk, individual: ind};
