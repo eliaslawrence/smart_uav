@@ -189,14 +189,16 @@ function Problem() {
         } 
 
         // Way Points
-        for(let i = 0; i < this.wayPoints.length; i++){
-            this.wayPoints[i].show();
-        } 
+        if(!start){
+            for(let i = 0; i < this.wayPoints.length; i++){
+                this.wayPoints[i].show();
+            } 
+        }
         
         // Origin
         if(this.origin){
             this.origin.show();
-        }        
+        }     
         
         return;
     }
@@ -267,8 +269,9 @@ function Problem() {
 
         // Way Points
         for(let i = 0; i < problemLoaded.wayPoints.length; i++){
-             this.wayPoints.push(new WayPoint(problemLoaded.wayPoints[i].x, problemLoaded.wayPoints[i].y, wayPointMaxWidth, wayPointMaxHeight, pg));
-        }
+           this.wayPoints.push(new WayPoint(problemLoaded.wayPoints[i].x, problemLoaded.wayPoints[i].y, wayPointMaxWidth, wayPointMaxHeight, pg));
+        } 
+        
         
         // Origin
         this.origin = new Origin(problemLoaded.origin.x, problemLoaded.origin.y, originMaxHeight, pg);
@@ -283,7 +286,8 @@ function Problem() {
         
 //        astar = new AStar(this.origin.x, this.origin.y, this.wayPoints[0].x, this.wayPoints[0].y, 10, 10);
         
-        waveFront = new WaveFront(pg, this.wayPoints[0].x, this.wayPoints[0].y, true, 10, 5, 4);
+        waveFront = new WaveFront(pg, this.wayPoints[0].x, this.wayPoints[0].y, true, 10, 10, 10);
+        waveFront.propagate(); 
                
 //        console.log(astar.astar());
     }

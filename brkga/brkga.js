@@ -1,17 +1,35 @@
 // Elias Lawrence
 
-function BRKGA(_maxPopSize, _chromoSize, _top, _bot, _rho, _decoder) {        
+var lastV;
+var lastFit;
+
+function equalArrays(a,b){
+    var resp = true;
+    
+    for(let i = 0; i < a.length; i++){
+        if(a[i] != b[i]) {
+            resp = false;
+            break;
+        }
+    }
+    
+    return resp;
+}
+
+function BRKGA(_maxPopSize, _chromoSize, _top, _cros, _bot, _rho, _decoder) {        
     this.decoder = _decoder;
     
     this.maxPopSize = _maxPopSize;
     this.chromoSize = _chromoSize;
     this.top        = _top;
+    this.cros       = _cros;
     this.bot        = _bot;
     this.rho        = _rho;
     
-    this.eliteSize     = parseInt(this.top * this.maxPopSize);
-    this.mutantSize    = parseInt(this.bot * this.maxPopSize);
-    this.crossoverSize = this.maxPopSize - this.eliteSize - this.mutantSize;
+    this.eliteSize     = parseInt(this.top  * this.maxPopSize);    
+    this.randomSize    = parseInt(this.bot  * this.maxPopSize);
+    this.crossoverSize = parseInt(this.cros * this.maxPopSize);
+    this.mutantSize    = this.maxPopSize - this.eliteSize - this.crossoverSize - this.randomSize;
     
     this.eliteStartIndex     = 0;
     this.eliteEndIndex       = this.eliteStartIndex + this.eliteSize;
@@ -22,21 +40,25 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _bot, _rho, _decoder) {
     this.mutantStartIndex    = this.crossoverEndIndex;
     this.mutantEndIndex      = this.mutantStartIndex + this.mutantSize;
     
-    this.fixedRK = [];
+    this.randomStartIndex    = this.mutantEndIndex;
+    this.randomEndIndex      = this.randomStartIndex + this.randomSize;
     
-    this.population = [];
+//    this.fixedRK = [];
+    
+//    this.population = [];
     
     // RK
     this.generateRandomKeys = function() {
-        let rk = [];
-        for(let i = 0; i < this.chromoSize; i++){
+        var rk = [];
+        for(var i = 0; i < this.chromoSize; i++){
 //            if(this.fixedRK[i] != null){
 //                rk.push(this.fixedRK[i]);
 //            } else {
 //                rk.push(random(-1,1));
 //                this.fixedRK.push(rk[i]);
 //            }
-            rk.push(random(-1,1));
+            var randomNum = random();
+            rk.push(parseFloat(randomNum.toFixed(3)));
         }  
         
         return rk;
@@ -45,10 +67,10 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _bot, _rho, _decoder) {
     
     // Initial Population
     this.generateInitialPopulation = function() {
-        let initialPop = [];
-        for(let i = 0; i < this.maxPopSize; i++){
-            let rk  = this.generateRandomKeys();
-            let ind = this.decoder.decode(rk);
+        var initialPop = [];
+        for(var i = 0; i < this.maxPopSize; i++){
+            var rk  = this.generateRandomKeys();
+            var ind = this.decoder.decode(rk);
             initialPop.push({rk: rk, individual: ind});
         }  
         
@@ -56,9 +78,9 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _bot, _rho, _decoder) {
     } 
     
     this.loadInitialPopulation = function(data) {
-        let initialPop = [];
+        var initialPop = [];
         
-        let i;
+        var i;
         for(i = 0; i < this.maxPopSize || i < data.population.length; i++){
             let rk  = data.population[i];
             let ind = this.decoder.decode(rk);
@@ -76,9 +98,9 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _bot, _rho, _decoder) {
     }
     
     this.savePopulation = function(population) {
-        let modelToSave = {};
+        var modelToSave = {};
         modelToSave.population = [];
-        for(let i = 0; i < this.maxPopSize; i++){
+        for(var i = 0; i < this.maxPopSize; i++){
             modelToSave.population.push(population[i].rk);            
         }  
         
@@ -87,21 +109,22 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _bot, _rho, _decoder) {
     
     // Crossover
     this.electParents = function(population) {
-        let rollElite    = parseInt(random(this.eliteStartIndex, this.eliteEndIndex));
-        let rollNonElite = parseInt(random(this.eliteEndIndex, this.maxPopSize));
+        var rollElite    = parseInt(random(this.eliteStartIndex, this.eliteEndIndex));
+        var rollNonElite = parseInt(random(this.eliteEndIndex, this.maxPopSize));
         
-        let parents = {elite: population[rollElite], nonElite: population[rollNonElite]};
+        var parents = {elite: population[rollElite], nonElite: population[rollNonElite]};
         
         return parents;
     }
     
     this.mating = function(parents) {
-        let eliteParent    = parents.elite;
-        let nonEliteParent = parents.nonElite;
+        var eliteParent    = parents.elite;
+        var nonEliteParent = parents.nonElite;
         
-        let child = [];
-        for(let i = 0; i < this.chromoSize; i++){
-            let roll  = random(1);
+        var child = [];
+        for(var i = 0; i < this.chromoSize; i++){
+            var roll = random(1);
+            roll = parseFloat(roll.toFixed(3));
             child.push(roll <= this.rho ? eliteParent.rk[i] : nonEliteParent.rk[i]);
         }  
         
@@ -109,11 +132,11 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _bot, _rho, _decoder) {
     }
     
     this.crossover = function(population, newPopulation) {        
-        for(let i = 0; i < this.crossoverSize; i++){
-            let parents = this.electParents(population);            
+        for(var i = 0; i < this.crossoverSize; i++){
+            var parents = this.electParents(population);            
             
-            let rk  = this.mating(parents);
-            let ind = this.decoder.decode(rk);
+            var rk  = this.mating(parents);
+            var ind = this.decoder.decode(rk);
             
             newPopulation[this.crossoverStartIndex + i] = {rk: rk, individual: ind};
         }  
@@ -122,27 +145,69 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _bot, _rho, _decoder) {
     }
     
     // Mutation
-    this.mutate = function(population, newPopulation) {        
-        for(let i = this.mutantStartIndex; i < this.mutantEndIndex; i++){
-//            let index = parseInt(random(this.crossoverStartIndex, this.maxPopSize));
+    this.mutating = function(original) {        
+        let mutation = [];
+        for(var i = 0; i < this.chromoSize; i++){
+            var roll  = random(1);
+            roll = parseFloat(roll.toFixed(3));
+            if(roll < 0.1){
+                mutation.push(min(1, original.rk[i] + 0.1));
+            } else if(roll < 0.2){
+                mutation.push(max(-1, original.rk[i] - 0.1));
+            } else {
+                mutation.push(original.rk[i]);
+            }            
+        }  
+        
+        return mutation;
+    }
+    
+    this.mutate = function(population, newPopulation) {      
+        var sumFitness = 0;
+        for(var i = 0; i < this.maxPopSize; i++){
+            sumFitness += population[i].individual.fitness;
+        }
+        var roulette = []
+        var currPos = 0;
+        for(var i = 0; i < this.maxPopSize; i++){
+            var relFitness = population[i].individual.fitness / sumFitness;
+            var qtyRoul = Math.floor(relFitness * this.maxPopSize);
+            var end = currPos + qtyRoul;
             
-//            let rk  = population[index].rk;
+            for(currPos; currPos < end; currPos++){
+                roulette.push(i);
+            }
+        }
+        
+        for(var i = this.mutantStartIndex; i < this.mutantEndIndex; i++){
+            var randomPos = random(roulette);
             
-            let rk  = this.generateRandomKeys();
-            let ind = this.decoder.decode(rk);
+            var rk  = this.mutating(population[randomPos]);
+            var ind = this.decoder.decode(rk);
             
             newPopulation[i] = {rk: rk, individual: ind};
         }  
         
         return newPopulation;
-    }    
+    }   
+    
+    this.random = function(newPopulation) {        
+        for(var i = this.randomStartIndex; i < this.randomEndIndex; i++){            
+            var rk  = this.generateRandomKeys();
+            var ind = this.decoder.decode(rk);
+            
+            newPopulation[i] = {rk: rk, individual: ind};
+        }  
+        
+        return newPopulation;
+    }  
     
     // Elite
     this.elite = function(population, newPopulation) { 
-        for(let i = 0; i < this.eliteEndIndex; i++){
+        for(var i = 0; i < this.eliteEndIndex; i++){
             
-            let rk  = population[i].rk;
-            let ind = this.decoder.decode(rk);
+            var rk  = population[i].rk;
+            var ind = this.decoder.decode(rk);
             
             newPopulation[i] = {rk: rk, individual: ind};
         }  
@@ -154,7 +219,7 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _bot, _rho, _decoder) {
     this.rank = function(population) {
         population.sort(function(a, b){
             
-            let better = a.individual.betterThan(b.individual);
+            var better = a.individual.betterThan(b.individual);
             if (better) {
               return -1;
             }
@@ -164,26 +229,52 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _bot, _rho, _decoder) {
 //            return a.individual.betterThan(b.individual) ? -1 : 1;
         })
         
-        return population
+        return population;
     }
+    
+    this.scaleFit = function(population) {
+        let maxFit = - Infinity;
+        let minFit =   Infinity;
         
-    this.exec = function(population, numGenerations) {   
-        console.log("rank");
-        let newPopulation;
+        for(let i = 0; i < this.maxPopSize; i++){
+            maxFit = max(maxFit, population[i].individual.fitness);
+            minFit = min(minFit, population[i].individual.fitness);
+        }
         
-        for(let g = 0; g < numGenerations; g++){
-            // copy population
-//            newPopulation = [...population];
-            newPopulation = this.rank(population);
-            
-            newPopulation = this.elite(population, newPopulation);
-            newPopulation = this.crossover(population, newPopulation);
-            newPopulation = this.mutate(population, newPopulation);
-            
-            population = newPopulation;
+        for(let i = 0; i < this.maxPopSize; i++){
+            population[i].individual.fitness = (population[i].individual.fitness - minFit) / (maxFit - minFit);
         }
         
         return population;
+    }
+        
+    this.exec = function(population) { 
+//        console.log('start');
+        
+//        console.log('rank');           
+        population = this.rank(population);
+        lastFit = population[0].individual.fitness;
+        lastV   = population[0];
+        bestQtyWayPoints = lastFit;
+        
+        //        console.log('scaleFit');
+        population = this.scaleFit(population);
+        
+//        console.log('slice');   
+        let newPopulation = [...population];           
+        
+//        console.log('elite');
+        newPopulation = this.elite(population, newPopulation);
+        
+//        console.log('crossover');
+        newPopulation = this.crossover(population, newPopulation);
+        
+        newPopulation = this.mutate(population, newPopulation);
+        
+//        console.log('random');
+        newPopulation = this.random(newPopulation);
+        
+        return newPopulation;
     };    
     
 }

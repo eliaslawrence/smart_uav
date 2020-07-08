@@ -10,8 +10,9 @@ function Decoder() {
             if(randomKeys[i] == null){
                 console.log('erro');
             }
-//            weights.push(randomKeys[i] * 2 - 1); // [0,1) -> [-1,1)
-            weights.push(randomKeys[i]);
+            let weight = randomKeys[i] * 2 - 1; // [0,1) -> [-1,1)
+            weights.push(parseFloat(weight.toFixed(3))); 
+//            weights.push(randomKeys[i]);
         }
         
         vehicle.brain.setWeights(weights);

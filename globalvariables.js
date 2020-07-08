@@ -57,20 +57,24 @@ var mapa;
 
 let brkga;
 let decoder;
-let currInd = 0;
 let generation = 1;
+let genDurP;
+let genMaxDuration = 7000;
 
 let initY;
 let initX;
 
+//Loop speed
 let loopSpeedP;
 let loopSpeed = 1;
 
-var debug;
-var bestDebug;
+// Vehicle Index
+let vehicleIndex = 0;
+let vehicleIndP;
+
 let currentIndP;
-let bestQtyWayPoints = 0;
-let bestGenQtyWayPoints = 0;
+let bestQtyWayPoints = -Infinity;
+let bestGenQtyWayPoints = -Infinity;
 let bestGenFit = Infinity;
 let bestIndRef = 0;
 let bestGenIndRef = 0;

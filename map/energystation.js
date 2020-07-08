@@ -27,7 +27,7 @@ function EnergyStation(_x, _y, _w, _h, _graphics) {
     this.show = function() {        
         this.graphics.noStroke();
         this.graphics.fill(this.color);
-        this.graphics.rect(this.position.x, this.position.y, this.w, this.h);         
+        this.graphics.rect(this.position.x - 0 / 2, this.position.y - 0 / 2, this.w, this.h);       
     };    
     
 }

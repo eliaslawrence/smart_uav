@@ -7,6 +7,13 @@ let pMap3;
 let pModel;
 let pModelBtn;
 
+// Checkbox
+var debug;
+var bestDebug;
+var sectorsDebug;
+var waveFrontDebug;
+var sectorsVisitedDebug;
+
 function mapFileSelected(file){  
     console.log("LOAD MAP");
     var reader = new FileReader();
@@ -141,8 +148,11 @@ function setDOM(){
 
 function setCheckboxes() {
     createP();
-    debug = createCheckbox('Show sensors');
-    bestDebug = createCheckbox('Best only');
+    debug               = createCheckbox('Show sensors');
+    bestDebug           = createCheckbox('Just one');
+    sectorsDebug        = createCheckbox('Show Sectors');
+    sectorsVisitedDebug = createCheckbox('Sectors Visited');
+    waveFrontDebug      = createCheckbox('Wave Front');
     createP();
 }
 
@@ -154,7 +164,7 @@ function subLS() {
     loopSpeed = loopSpeed == 1 ? 1 : loopSpeed - 1;
 }
 
-function setSlider() {
+function setLoopSpeedBt() {
     subLSBt = createButton('-');
     subLSBt.addClass('button');
     subLSBt.addClass('red-bg');
@@ -166,7 +176,48 @@ function setSlider() {
     addLSBt.addClass('border-rd-30');
     addLSBt.addClass('margin-left-10');
     addLSBt.mousePressed(addLS);
+}
+
+function addGD() {
+    genMaxDuration += 50;
+}
+
+function subGD() {
+    genMaxDuration = genMaxDuration == 50 ? 50 : genMaxDuration - 50;
+}
+
+function setGenDurBt() {
+    subLSBt = createButton('-');
+    subLSBt.addClass('button');
+    subLSBt.addClass('red-bg');
+    subLSBt.addClass('border-rd-30');
+    subLSBt.mousePressed(subGD);
     
-//    slider = createSlider(1, 200, 1);
-//    createP();
+    addLSBt = createButton('+');
+    addLSBt.addClass('button');
+    addLSBt.addClass('border-rd-30');
+    addLSBt.addClass('margin-left-10');
+    addLSBt.mousePressed(addGD);
+}
+
+function addVI() {
+    vehicleIndex = vehicleIndex == vehiclesPop.length - 1 ? vehiclesPop.length - 1 : vehicleIndex + 1;
+}
+
+function subVI() {
+    vehicleIndex = vehicleIndex == 0 ? 0 : vehicleIndex - 1;
+}
+
+function setVehicleIndBt() {
+    subLSBt = createButton('-');
+    subLSBt.addClass('button');
+    subLSBt.addClass('red-bg');
+    subLSBt.addClass('border-rd-30');
+    subLSBt.mousePressed(subVI);
+    
+    addLSBt = createButton('+');
+    addLSBt.addClass('button');
+    addLSBt.addClass('border-rd-30');
+    addLSBt.addClass('margin-left-10');
+    addLSBt.mousePressed(addVI);
 }

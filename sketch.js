@@ -18,25 +18,32 @@ function setup() {
 //    initX = random(pgWidth);
     
     // BRKGA
-    let chromoSize = getWeightsSize (nnInputSize, 1, 18, 4);
-    let top = 0.3;
-    let bot = 0.3;
-    let rho = 0.7;//0.7;    
+    let chromoSize = getWeightsSize (nnInputSize, nnHiddens, nnHiddenSize, 4);
+    let top  = 0.3;
+    let cros = 0.3;
+    let bot  = 0.1;
+    let rho  = 0.9;//0.7;    
     
     decoder = new Decoder();
-    brkga   = new BRKGA(numVehicles, chromoSize, top, bot, rho, decoder);        
+    brkga   = new BRKGA(numVehicles, chromoSize, top, cros, bot, rho, decoder);        
     
     // Checkbox
-    setCheckboxes();
-    
-    // Info
-    loopSpeedP = createP();
-    
-    // Slider    
-    setSlider();
+    setCheckboxes();            
     
     // Info
     currentIndP = createP();
+    
+    // Vehicle Index
+    vehicleIndP = createP(); 
+    setVehicleIndBt();
+    
+    // Loop Speed
+    loopSpeedP = createP(); 
+    setLoopSpeedBt();
+    
+    // GEN duration
+    genDurP = createP(); 
+    setGenDurBt();         
 }
 
 function draw() {       
@@ -51,34 +58,37 @@ function draw() {
 //            astar.show();
 //        } 
         
-        if(waveFront){
-            waveFront.propagate(); 
+        if(waveFrontDebug.checked() && waveFront){
             waveFront.show();
+        }                        
+        
+        if(sectorsDebug.checked()){
+            drawSectors();            
         } 
         
-        problem.show();                
+        problem.show();                      
           
         let nDead = 0;
         if(start){
             bestGenDistRef = Infinity;
             bestDistRef = Infinity;
-            for (currInd = 0; currInd < numVehicles; currInd++) {
-                if(vehiclesPop[currInd].individual.isDead()){
+            for (var currInd = 0; currInd < vehiclesPop.length; currInd++) {
+                if(vehiclesPop[currInd].individual.isDead(currInd)){
                     nDead++;
+                    
+                    if(vehiclesPop[currInd].individual.fitness > bestGenQtyWayPoints){
+                        bestGenQtyWayPoints = vehiclesPop[currInd].individual.fitness;
+                    }
+
+//                    if(vehiclesPop[currInd].individual.fitness > bestQtyWayPoints){
+//                        bestQtyWayPoints = vehiclesPop[currInd].individual.fitness;            
+//                    }
                 } else {  
                     // Vehicles    
                     vehiclesPop[currInd].individual.update();
 
                     if(vehiclesPop[currInd].individual.distance < bestGenFit){
                         bestGenFit = vehiclesPop[currInd].individual.distance;
-                    }
-
-                    if(vehiclesPop[currInd].individual.qtyWayPoints > bestGenQtyWayPoints){
-                        bestGenQtyWayPoints = vehiclesPop[currInd].individual.qtyWayPoints;
-                    }
-
-                    if(vehiclesPop[currInd].individual.qtyWayPoints > bestQtyWayPoints){
-                        bestQtyWayPoints = vehiclesPop[currInd].individual.qtyWayPoints;            
                     }
                     
                     if(vehiclesPop[currInd].individual.bestIndRef > bestGenIndRef){
@@ -96,12 +106,20 @@ function draw() {
                     if(vehiclesPop[currInd].individual.distToRef < bestDistRef){
                         bestDistRef = vehiclesPop[currInd].individual.distToRef;            
                     }
-                }
+                }                                
 
-                if(!bestDebug.checked() || currInd == 0){
+                if(!bestDebug.checked() || currInd == vehicleIndex){
+                    if(sectorsVisitedDebug.checked()){
+                        vehiclesPop[currInd].individual.drawSectors(); 
+                    }                    
                     vehiclesPop[currInd].individual.show();
                 }
             }
+            
+            currentIndP.html("<h2>Generation: " + generation + "<\h2>" + "\n" +
+                         "<h3>Best Points: "  + bestQtyWayPoints + "<\h3>" + "\n" +
+                         "<h3>Best GEN Points: " + bestGenQtyWayPoints + "<\h3>" + "\n" +
+                         "<h3>Alive: " + (vehiclesPop.length - nDead) + "<\h3>" + "\n");  
             
             if(nDead == vehiclesPop.length){
                 vehiclesPop = brkga.exec(vehiclesPop, 1);
@@ -115,18 +133,37 @@ function draw() {
 
         image(pg, 0, 0);
 
-
+        // GEN duration
+        genDurP.html("<h2>Gen Max Duration: " + genMaxDuration + "<\h2>"); 
+        
+        // Loop speed
         loopSpeedP.html("<h2>Loop Speed: " + loopSpeed + "<\h2>");  
         
-        currentIndP.html("<h2>Generation: "        + generation                   + "<\h2>" + "\n" +
+        // Vehicle IndexvehicleIndP
+        vehicleIndP.html("<h2>Vehicle Index: " + vehicleIndex + "<\h2>");  
+        
+//        currentIndP.html("<h2>Generation: "        + generation                   + "<\h2>" + "\n" +
 //                         "<h3>Best Way Points: "      + bestQtyWayPoints               + "<\h3>" + "\n" +
 //                         "<h3>Best GEN Distance: " + bestGenFit                   + "<\h3>" + "\n" +
-                         "<h3>Best GEN Way Points: "  + bestGenQtyWayPoints            + "<\h3>" + "\n" +
-                         "<h3>Best INDEX reference: " + bestIndRef               + "<\h3>" + "\n" +                    
-                         "<h3>Best GEN INDEX reference: " + bestGenIndRef               + "<\h3>" + "\n" +
+//                         "<h3>Best Points: "  + bestQtyWayPoints            +
+//                         "<h3>Best GEN Points: "  + bestGenQtyWayPoints            + "<\h3>" + "\n" +
+//                         "<h3>Best INDEX reference: " + bestIndRef               + "<\h3>" + "\n" +                    
+//                         "<h3>Best GEN INDEX reference: " + bestGenIndRef               + "<\h3>" + "\n" +
 //                         "<h3>Best GEN distance reference: " + bestGenDistRef               + "<\h3>" + "\n" +
 //                         "<h3>Best distance reference: " + bestDistRef               + "<\h3>" + "\n" +
-                         "<h3>Alive: "             + (vehiclesPop.length - nDead) + "<\h3>" + "\n");        
+//                         "<h3>Alive: "             + (vehiclesPop.length - nDead) + "<\h3>" + "\n");        
         
+    }
+}
+
+function drawSectors(){
+    pg.stroke(0);
+    pg.strokeWeight(2);
+    for (let i = 0; i < numSectorsX; i++) {
+        pg.line(i*pgWidth/numSectorsX, 0, i*pgWidth/numSectorsX, pgHeight);
+    }
+    
+    for (let i = 0; i < numSectorsY; i++) {
+        pg.line(0, i*pgHeight/numSectorsY, pgWidth, i*pgHeight/numSectorsY);
     }
 }

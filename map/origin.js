@@ -17,7 +17,7 @@ function Origin(_x, _y, _w, _graphics) {
         this.graphics.noStroke();
         this.graphics.fill(this.color);         
         this.graphics.rect(this.position.x, this.position.y - this.w, this.w, 3*this.w);
-        this.graphics.rect(this.position.x - this.w, this.position.y, 3*this.w, this.w);
+        this.graphics.rect(this.position.x - this.w, this.position.y, 3*this.w, this.w);        
         
 //        this.graphics.circle(this.position.x, this.position.y, this.w);
     };    

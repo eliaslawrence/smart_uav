@@ -54,7 +54,7 @@ function WaveFront(_graphics, origin_x, origin_y, _diagonal_movement, _step, _ra
         return this.map[parseInt(x) + parseInt(y) * parseInt(this.graphics.width)] = min(value, this.map[parseInt(x) + parseInt(y) * parseInt(this.graphics.width)]);      
     }
     
-    this.propagate = function(){
+    this.propagateGraphics = function(){
         if(this.neighbors.length > 0){
             
             for (let i = this.neighbors.length-1; i >= 0; i--) { 
@@ -95,6 +95,28 @@ function WaveFront(_graphics, origin_x, origin_y, _diagonal_movement, _step, _ra
         }
     }
     
+    this.propagate = function(){
+        while(this.neighbors.length > 0){            
+            for (let i = this.neighbors.length-1; i >= 0; i--) { 
+                if(!this.neighbors[i].visited()){
+                    this.neighbors[i].value = this.maxValue;                    
+                    let adjacents = this.neighbors[i].adjacents(this.diagonal_movement, 1, this.radius);
+                    
+                    let visited = this.neighbors.splice(i, 1)[0];
+                    if(visited){
+                        this.visited.push(visited);
+                    }
+                    
+                    this.neighbors = this.neighbors.concat(adjacents);
+                } else {
+                    this.neighbors.splice(i, 1);
+                }                
+            }
+            
+            this.maxValue++;                        
+        } 
+    }
+    
     this.show = function(){
         for (let i = 0; i < this.visited.length; i++) { 
             this.visited[i].show(this.graphics, this.maxValue);
@@ -103,12 +125,5 @@ function WaveFront(_graphics, origin_x, origin_y, _diagonal_movement, _step, _ra
         for (let i = 0; i < this.path.length; i++) { 
             this.path[i].showPath(this.graphics);
         } 
-        
-//        let node = this.getNode(problem.origin.position.x, problem.origin.position.y);
-//        
-//        do{
-//            node.showPath();
-//            
-//        }while(node.value != 0);
     }
 }

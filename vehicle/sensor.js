@@ -27,21 +27,21 @@ function Sensor(_base, _vec, _type, _graphics) {
     };
         
     this.show = function() {
-        
-        this.graphics.push();
-        this.graphics.stroke(this.color);
-        this.graphics.strokeWeight(2);
-        this.graphics.fill(this.color);
-        this.graphics.translate(this.base.x, this.base.y);
-        this.graphics.line(0, 0, this.vector.x, this.vector.y);
-        this.graphics.rotate(this.vector.heading());
-        
-        let arrowSize = 7;
-        
-        this.graphics.translate(this.vector.mag() - arrowSize, 0);
-        this.graphics.triangle(0, arrowSize / 2, 0, -arrowSize / 2, arrowSize, 0);
-        this.graphics.pop();
-        
+        if(this.type != NOTHING_TYPE){
+            this.graphics.push();
+            this.graphics.stroke(this.color);
+            this.graphics.strokeWeight(2);
+            this.graphics.fill(this.color);
+            this.graphics.translate(this.base.x, this.base.y);
+            this.graphics.line(0, 0, this.vector.x, this.vector.y);
+            this.graphics.rotate(this.vector.heading());
+
+            let arrowSize = 7;
+
+            this.graphics.translate(this.vector.mag() - arrowSize, 0);
+            this.graphics.triangle(0, arrowSize / 2, 0, -arrowSize / 2, arrowSize, 0);
+            this.graphics.pop();            
+        }                
     };    
     
 }

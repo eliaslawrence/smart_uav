@@ -108,8 +108,6 @@ function NeuralNetwork(_qtyNeuronsInput, _qtyHiddenLayers, _qtyNeuronsHidden, _q
         }
     }
     
-    console.log("teste");
-    
     this.getWeights = function (){     
         let weights = [];
         // Each layer
@@ -143,13 +141,13 @@ function NeuralNetwork(_qtyNeuronsInput, _qtyHiddenLayers, _qtyNeuronsHidden, _q
                 // Each weight
                 for(let weightIndex = 0; weightIndex < this.layers[layerIndex].neurons[neuronIndex].qtyLinks; weightIndex++){
                     if(isNaN(this.layers[layerIndex].neurons[neuronIndex].weights[weightIndex])){
-                        console.log('erro');
+                        console.error('erro');
                     }
                     neuronOutput += this.layers[layerIndex - 1].neurons[weightIndex].output * this.layers[layerIndex].neurons[neuronIndex].weights[weightIndex];
                 }
 
                 neuronOutput += this.layers[layerIndex].neurons[neuronIndex].bias;
-                this.layers[layerIndex].neurons[neuronIndex].output = neuronOutput;
+                this.layers[layerIndex].neurons[neuronIndex].output = Activation.sigmoid(neuronOutput);
             }
         }
         
