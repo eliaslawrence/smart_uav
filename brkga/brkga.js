@@ -3,6 +3,9 @@
 var lastV;
 var lastFit;
 
+var fitToSave       = {};
+fitToSave.fitnessTS = [];
+
 function equalArrays(a,b){
     var resp = true;
     
@@ -147,13 +150,27 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _cros, _bot, _rho, _decoder) {
     // Mutation
     this.mutating = function(original) {        
         let mutation = [];
-        for(var i = 0; i < this.chromoSize; i++){
-            var roll  = random(1);
-            roll = parseFloat(roll.toFixed(3));
-            if(roll < 0.1){
-                mutation.push(min(1, original.rk[i] + 0.1));
-            } else if(roll < 0.2){
-                mutation.push(max(-1, original.rk[i] - 0.1));
+//        for(var i = 0; i < this.chromoSize; i++){
+//            var roll  = random(1);
+//            roll = parseFloat(roll.toFixed(3));
+//            if(roll < 0.1){
+//                mutation.push(min(1, original.rk[i] + 0.1));
+//            } else if(roll < 0.2){
+//                mutation.push(max(-1, original.rk[i] - 0.1));
+//            } else {
+//                mutation.push(original.rk[i]);
+//            }            
+//        }  
+        
+        var roll = Math.floor(Math.random()*this.chromoSize);
+        for(var i = 0; i < this.chromoSize; i++){    
+            if(i == roll){
+                var roll2 = Math.random();
+                if(roll2 < 0.5){
+                    mutation.push(min(1, original.rk[i] + 0.1));
+                } else {
+                    mutation.push(max(-1, original.rk[i] - 0.1));
+                }
             } else {
                 mutation.push(original.rk[i]);
             }            
@@ -182,6 +199,10 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _cros, _bot, _rho, _decoder) {
         for(var i = this.mutantStartIndex; i < this.mutantEndIndex; i++){
             var randomPos = random(roulette);
             
+            if(!population[randomPos]){
+               console.error('error');
+            }
+            
             var rk  = this.mutating(population[randomPos]);
             var ind = this.decoder.decode(rk);
             
@@ -208,8 +229,9 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _cros, _bot, _rho, _decoder) {
             
             var rk  = population[i].rk;
             var ind = this.decoder.decode(rk);
+            ind.aggFitness = population[i].individual.aggFitness;
             
-            newPopulation[i] = {rk: rk, individual: ind};
+            newPopulation[i] = {rk: rk, individual: ind};            
         }  
         
         return newPopulation;
@@ -233,16 +255,62 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _cros, _bot, _rho, _decoder) {
     }
     
     this.scaleFit = function(population) {
-        let maxFit = - Infinity;
-        let minFit =   Infinity;
+        let maxFit  = - Infinity;
+        let minFit  =   Infinity;
+        let maxFit2 = - Infinity;
+        let minFit2 =   Infinity;
         
-        for(let i = 0; i < this.maxPopSize; i++){
+        for(let i = 0; i < this.maxPopSize; i++){            
             maxFit = max(maxFit, population[i].individual.fitness);
-            minFit = min(minFit, population[i].individual.fitness);
+            minFit = min(minFit, population[i].individual.fitness);                      
         }
         
-        for(let i = 0; i < this.maxPopSize; i++){
-            population[i].individual.fitness = (population[i].individual.fitness - minFit) / (maxFit - minFit);
+        if(minFit == maxFit){
+            for(let i = 0; i < this.maxPopSize; i++){
+                let currFit = population[i].individual.fitness;
+
+//                for(let indF = 0; indF < population[i].individual.aggFitness.length; indF++){
+//                    population[i].individual.fitness += population[i].individual.aggFitness[indF];
+//
+//                }
+
+                maxFit2 = max(maxFit2, population[i].individual.fitness);
+                minFit2 = min(minFit2, population[i].individual.fitness);
+
+                if(population[i].individual.aggFitness.length == 4){ 
+                    population[i].individual.aggFitness.shift();
+                }
+
+                population[i].individual.aggFitness.push(0);
+            }            
+        } else {
+            for(let i = 0; i < this.maxPopSize; i++){
+                let currFit = population[i].individual.fitness;
+
+//                for(let indF = 0; indF < population[i].individual.aggFitness.length; indF++){
+//                    population[i].individual.fitness += population[i].individual.aggFitness[indF];
+//
+//                }
+
+                maxFit2 = max(maxFit2, population[i].individual.fitness);
+                minFit2 = min(minFit2, population[i].individual.fitness);
+
+                if(population[i].individual.aggFitness.length == 4){ 
+                    population[i].individual.aggFitness.shift();
+                }
+
+                population[i].individual.aggFitness.push((currFit - minFit) / (maxFit - minFit));
+            }
+        }        
+        
+        if(minFit2 == maxFit2){
+            for(let i = 0; i < this.maxPopSize; i++){
+                population[i].individual.fitness = 0;
+            }
+        } else {
+            for(let i = 0; i < this.maxPopSize; i++){
+                population[i].individual.fitness = (population[i].individual.fitness - minFit2) / (maxFit2 - minFit2);                
+            }
         }
         
         return population;
@@ -250,6 +318,14 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _cros, _bot, _rho, _decoder) {
         
     this.exec = function(population) { 
 //        console.log('start');
+        if(Number.isNaN(population[0].individual.fitness)){
+            console.error('error');
+        }
+        //        console.log('scaleFit');
+        population = this.scaleFit(population);
+        if(Number.isNaN(population[0].individual.fitness)){
+            console.error('error');
+        }
         
 //        console.log('rank');           
         population = this.rank(population);
@@ -257,18 +333,30 @@ function BRKGA(_maxPopSize, _chromoSize, _top, _cros, _bot, _rho, _decoder) {
         lastV   = population[0];
         bestQtyWayPoints = lastFit;
         
-        //        console.log('scaleFit');
-        population = this.scaleFit(population);
+        // Fitness Time Series
+        let f = {};
+        f.gen = generation;
+        f.fit = lastFit;
+        fitToSave.fitnessTS.push(f);                        
         
 //        console.log('slice');   
         let newPopulation = [...population];           
         
 //        console.log('elite');
+        if(Number.isNaN(population[0].individual.fitness)){
+            console.error('error');
+        }
         newPopulation = this.elite(population, newPopulation);
         
 //        console.log('crossover');
+        if(Number.isNaN(population[0].individual.fitness)){
+            console.error('error');
+        }
         newPopulation = this.crossover(population, newPopulation);
         
+        if(Number.isNaN(population[0].individual.fitness)){
+            console.error('error');
+        }
         newPopulation = this.mutate(population, newPopulation);
         
 //        console.log('random');

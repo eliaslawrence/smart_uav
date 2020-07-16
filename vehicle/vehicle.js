@@ -5,7 +5,7 @@ var numSensors  = 7;
 
 let numSectorsX = 8;
 let numSectorsY = 5;
-var nnInputSize = numSensors * 2 + 3 + numSectorsX * numSectorsY + 2;// + 1 + numSectorsX * numSectorsY + 2;//6;
+var nnInputSize = numSensors* 2 + 3 + 2;// + numSectorsX * numSectorsY;// + 1 + numSectorsX * numSectorsY + 2;//6;
 //var nnInputSize = numSectorsX * numSectorsY + 1;//6;
 var nnHiddenSize = 32;
 var nnHiddens    = 2;
@@ -43,6 +43,7 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
     this.lastWayPointTime = 0;
     this.time             = 0;
     this.fitness          = 0;
+    this.aggFitness       = [];
     this.qtyWayPoints     = 0;
     this.lastQtyWayPoints = 0;
     this.distance         = Infinity;
@@ -206,23 +207,29 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
         
     this.wayPointCollision = function(list) {
         for (var i = list.length - 1; i >= 0; i--) {
-            var d = this.position.dist(createVector(list[i].position.x + list[i].r/2, list[i].position.y + list[i].r/2));
+            var d_x = this.position.dist(createVector(list[i].position.x + list[i].w/2, this.position.y));
+            var d_y = this.position.dist(createVector(this.position.x, list[i].position.y + list[i].h/2));
             
-            if(d < this.distToWP[i]){
-               this.distToWP[i] = d;
-            }
+//            var d = this.position.dist(createVector(list[i].position.x + list[i].r/2, list[i].position.y + list[i].r/2));
             
-            if(d < this.distance){
-                this.distance = d;
-            }
+//            if(d < this.distToWP[i]){
+//               this.distToWP[i] = d;
+//            }
             
-            if (d < list[i].r/2 + this.r){//this.maxspeed) {
+//            if(d < this.distance){
+//                this.distance = d;
+//            }
+            
+            if (d_x < list[i].w/2 + this.r && d_y < list[i].h/2 + this.r) {
+//            if (d < list[i].r/2 + this.r){//this.maxspeed) {
+//                console.log(this.ind);
                 list.splice(i, 1);
                 this.distToWP.splice(i, 1);
                 
                 this.qtyWayPoints++;
 //                this.addFitness(1);
-                this.fitness = 2;
+                this.fitness = 4 + 2/(this.time);
+//                this.fitness = 4;
                 this.lastWayPointTime = this.time;             
                    
                 this.loadPixels = true;
@@ -492,6 +499,21 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
                 for(var i = 0; i < this.sensors.length; i++){
                     this.sensors[i].show();
                 }
+                
+//                if(this.wayPoints[0]){
+//                    let vecDir = createVector(this.wayPoints[0].position.x - this.position.x, this.wayPoints[0].position.y - this.position.y);
+//                    
+//                    let v = p5.Vector.fromAngle(vecDir.heading(), 30);
+//                    let vx = v.x;
+//                    let vy = v.y;
+//                    
+//                    this.graphics.push();
+//                    this.graphics.translate(this.position.x, this.position.y);
+//                    this.graphics.noFill();
+//                    this.graphics.stroke(0);
+//                    this.graphics.line(0, 0, vx, vy);
+//                    this.graphics.pop();
+//                }                
             }
 
             this.graphics.push();
@@ -618,20 +640,56 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
 //        this.velocity.rotate(-PI / 2);
     }
     
-    this.look2 = function() {
+    this.look = function() {
         if(!this.firstLoop){
             this.updateSensors();            
         } 
-                
         
-        for(let i = 0; i < this.sectors.length; i++) { 
-            this.vision[i] = this.sectors[i];
+        let visionInd;
+        for(let i = 0; i < this.sensors.length; i++) {                     
+            visionInd = 2*i;
+//            visionInd = i;
+            
+            let wInd = visionInd;
+            let sInd = visionInd;
+            let oInd = visionInd + 1;
+            
+            this.vision[wInd]   = -1; // way point?
+            this.vision[oInd] = -1; // prohibited?
+            
+            switch(this.sensors[i].type){
+                    case WAY_POINT_TYPE:
+                        this.vision[wInd] = 1/(this.sensors[i].vector.mag()); 
+                        break;
+                    case OBSTACLE_TYPE:
+                        this.vision[oInd] = 1/(this.sensors[i].vector.mag()); 
+                        break;
+            }
         }
         
-        this.vision[this.sectors.length]     = this.map.getSector(this.position.x, this.position.y);
+        // Vehicle position
+        this.vision[this.sensors.length*2]     = this.position.x / this.graphics.width;
+        this.vision[this.sensors.length*2 + 1] = this.position.y / this.graphics.height;
+    
+        
+        this.vision[this.sensors.length*2 + 2] = this.direction.heading() / TWO_PI;
+        
+        // Way point position        
+        if(this.wayPoints[0]){
+//            let vecDir = createVector(this.wayPoints[0].position.x - this.position.x, this.wayPoints[0].position.y - this.position.y);
+//            
+//            this.vision[this.sensors.length] = vecDir.heading() - this.direction.heading()/ TWO_PI;
+
+            this.vision[this.sensors.length*2 + 3] = this.wayPoints[0].position.x / this.graphics.width;
+            this.vision[this.sensors.length*2 + 4] = this.wayPoints[0].position.y / this.graphics.height;            
+        } else {
+//            this.vision[this.sensors.length] = -1;
+            this.vision[this.sensors.length*2 + 3] = -1;
+            this.vision[this.sensors.length*2 + 4] = -1;
+        }
     }
     
-    this.look = function() {
+    this.look2 = function() {
         if(!this.firstLoop){
             this.updateSensors();            
         } 
@@ -668,7 +726,7 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
         this.vision[this.sensors.length*2 + 1] = this.position.y / this.graphics.height;
     
         
-        this.vision[this.sensors.length*2 + 2] = this.direction.heading() / TWO_PI;
+        this.vision[this.sensors.length*2 + 2] = this.direction.heading() / TWO_PI;                
         
         // Sectors  
         for(let i = 0; i < this.sectors.length; i++) {
@@ -678,7 +736,7 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
         // Way point position        
         if(this.wayPoints[0]){
             this.vision[this.sensors.length*2 + 3 + this.sectors.length] = this.wayPoints[0].position.x / this.graphics.width;
-            this.vision[this.sensors.length*2 + 4 + this.sectors.length] = this.wayPoints[0].position.y / this.graphics.height;
+            this.vision[this.sensors.length*2 + 4 + this.sectors.length] = this.wayPoints[0].position.y / this.graphics.height;                        
         } else {
             this.vision[this.sensors.length*2 + 3 + this.sectors.length] = -1;
             this.vision[this.sensors.length*2 + 4 + this.sectors.length] = -1;
@@ -769,7 +827,8 @@ function Vehicle(_problem, _graphics, _initX, _initY) {
                 if(this.lastWP < this.distWP){
                     this.distWP  = this.lastWP; 
                     if(this.wayPoints.length > 0){
-                        this.fitness = this.distWP == 0 ? 1 : 1/(this.distWP); 
+                        this.fitness = this.distWP == 0 ? 2 + 1/(this.time): 1/(this.distWP) + 1/(this.distWP*this.distWP*this.time); 
+//                        this.fitness = this.distWP == 0 ? 2 : 1/(this.distWP); 
                     }                    
                 }                
 //                if(this.collide){

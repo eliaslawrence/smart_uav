@@ -59,7 +59,7 @@ let brkga;
 let decoder;
 let generation = 1;
 let genDurP;
-let genMaxDuration = 7000;
+let genMaxDuration = 5000;
 
 let initY;
 let initX;

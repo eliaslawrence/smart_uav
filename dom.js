@@ -132,6 +132,12 @@ function setDOM(){
         brkga.savePopulation(vehiclesPop);
         console.log("SAVE");
     });
+    
+    let fitButton = select('#saveFit');    
+    fitButton.mousePressed(function() {
+        save(fitToSave, 'fitness.json');
+        console.log("SAVE FITNESS");
+    });
 
     let clearButton = select('#clear');    
     clearButton.mousePressed(function() {

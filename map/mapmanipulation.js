@@ -94,10 +94,15 @@ function setProblemConfig(){
 }
 
 function mousePressed() {
-    if(mouseX > 0 && mouseX < pgWidth && mouseY > 0 && mouseY < pgHeight){  
-        if(mapButtonSelected != OBSTACLE_BUTTON){
-            problem.insert(mapButtonSelected, mouseX, mouseY);
-        }                
+    
+    if(mouseX > 0 && mouseX < pgWidth && mouseY > 0 && mouseY < pgHeight){
+        if(start){        
+            problem.origin = new Origin(mouseX, mouseY, originMaxHeight, pg);
+        } else {  
+    //        if(mapButtonSelected != OBSTACLE_BUTTON){
+                problem.insert(mapButtonSelected, mouseX, mouseY);
+    //        }                
+        }
     }
     
     // prevent default
@@ -105,11 +110,11 @@ function mousePressed() {
 }
 
 function mouseDragged() {
-    if(mouseX > 0 && mouseX < pgWidth && mouseY > 0 && mouseY < pgHeight){   
-        if(mapButtonSelected == OBSTACLE_BUTTON){
-            problem.insert(mapButtonSelected, mouseX, mouseY);
-        }       
-    }
+//    if(mouseX > 0 && mouseX < pgWidth && mouseY > 0 && mouseY < pgHeight){   
+//        if(mapButtonSelected == OBSTACLE_BUTTON){
+//            problem.insert(mapButtonSelected, mouseX, mouseY);
+//        }       
+//    }
     
     // prevent default
     return false;

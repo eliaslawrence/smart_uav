@@ -70,50 +70,63 @@ function draw() {
           
         let nDead = 0;
         if(start){
-            bestGenDistRef = Infinity;
-            bestDistRef = Infinity;
-            for (var currInd = 0; currInd < vehiclesPop.length; currInd++) {
-                if(vehiclesPop[currInd].individual.isDead(currInd)){
-                    nDead++;
-                    
-                    if(vehiclesPop[currInd].individual.fitness > bestGenQtyWayPoints){
-                        bestGenQtyWayPoints = vehiclesPop[currInd].individual.fitness;
-                    }
+            if(generation <= 100){
+                bestGenDistRef = Infinity;
+                bestDistRef = Infinity;
+                for (var currInd = 0; currInd < vehiclesPop.length; currInd++) {
+                    if(vehiclesPop[currInd].individual.isDead(currInd)){
+                        nDead++;
 
-//                    if(vehiclesPop[currInd].individual.fitness > bestQtyWayPoints){
-//                        bestQtyWayPoints = vehiclesPop[currInd].individual.fitness;            
-//                    }
-                } else {  
-                    // Vehicles    
-                    vehiclesPop[currInd].individual.update();
+    //                    if(vehiclesPop[currInd].individual.fitness > bestGenQtyWayPoints){
+    //                        bestGenQtyWayPoints = vehiclesPop[currInd].individual.fitness;
+    //                    }
+    //
+    //                    if(vehiclesPop[currInd].individual.fitness > bestQtyWayPoints){
+    //                        bestQtyWayPoints = vehiclesPop[currInd].individual.fitness;            
+    //                    }
+                    } else {  
+                        // Vehicles    
+                        vehiclesPop[currInd].individual.update();
 
-                    if(vehiclesPop[currInd].individual.distance < bestGenFit){
-                        bestGenFit = vehiclesPop[currInd].individual.distance;
-                    }
-                    
-                    if(vehiclesPop[currInd].individual.bestIndRef > bestGenIndRef){
-                        bestGenIndRef = vehiclesPop[currInd].individual.bestIndRef;
-                    }
+                        if(vehiclesPop[currInd].individual.fitness > bestGenQtyWayPoints){
+                            bestGenQtyWayPoints = vehiclesPop[currInd].individual.fitness;
+                        }
 
-                    if(vehiclesPop[currInd].individual.bestIndRef > bestIndRef){
-                        bestIndRef = vehiclesPop[currInd].individual.bestIndRef;            
-                    }
-                    
-                    if(vehiclesPop[currInd].individual.distToRef < bestGenDistRef){
-                        bestGenDistRef = vehiclesPop[currInd].individual.distToRef;
-                    }
+                        if(vehiclesPop[currInd].individual.fitness > bestQtyWayPoints){
+                            bestQtyWayPoints = vehiclesPop[currInd].individual.fitness;            
+                        }
 
-                    if(vehiclesPop[currInd].individual.distToRef < bestDistRef){
-                        bestDistRef = vehiclesPop[currInd].individual.distToRef;            
-                    }
-                }                                
+                        if(vehiclesPop[currInd].individual.distance < bestGenFit){
+                            bestGenFit = vehiclesPop[currInd].individual.distance;
+                        }
 
-                if(!bestDebug.checked() || currInd == vehicleIndex){
-                    if(sectorsVisitedDebug.checked()){
-                        vehiclesPop[currInd].individual.drawSectors(); 
-                    }                    
-                    vehiclesPop[currInd].individual.show();
+                        if(vehiclesPop[currInd].individual.bestIndRef > bestGenIndRef){
+                            bestGenIndRef = vehiclesPop[currInd].individual.bestIndRef;
+                        }
+
+                        if(vehiclesPop[currInd].individual.bestIndRef > bestIndRef){
+                            bestIndRef = vehiclesPop[currInd].individual.bestIndRef;            
+                        }
+
+                        if(vehiclesPop[currInd].individual.distToRef < bestGenDistRef){
+                            bestGenDistRef = vehiclesPop[currInd].individual.distToRef;
+                        }
+
+                        if(vehiclesPop[currInd].individual.distToRef < bestDistRef){
+                            bestDistRef = vehiclesPop[currInd].individual.distToRef;            
+                        }
+                    }                                
+
+                    if(!bestDebug.checked() || currInd == vehicleIndex){
+                        if(sectorsVisitedDebug.checked()){
+                            vehiclesPop[currInd].individual.drawSectors(); 
+                        }                    
+                        vehiclesPop[currInd].individual.show();
+                    }
                 }
+                
+            }else{
+                console.log("END");
             }
             
             currentIndP.html("<h2>Generation: " + generation + "<\h2>" + "\n" +
@@ -122,6 +135,21 @@ function draw() {
                          "<h3>Alive: " + (vehiclesPop.length - nDead) + "<\h3>" + "\n");  
             
             if(nDead == vehiclesPop.length){
+//                var randOriginPos = random();
+                
+//                if(randOriginPos < 0.1){
+                
+//                if((generation % 1) == 0){
+//                    var randomX;
+//                    var randomY;
+//                    do{
+//                        randomX = random(20, pg.width - 20);
+//                        randomY = random(20, pg.height - 20);        
+//                    }while(vehiclesPop[0].individual.map.containsObstacle(randomX, randomY,20) || vehiclesPop[0].individual.map.containsStation(randomX, randomY,20) || vehiclesPop[0].individual.map.containsWayPoint(randomX, randomY,20));
+//                    
+//                    problem.origin = new Origin(randomX, randomY, originMaxHeight, pg);
+//                }
+                
                 vehiclesPop = brkga.exec(vehiclesPop, 1);
                 generation++;
                 bestGenQtyWayPoints = 0;
